@@ -13,6 +13,8 @@ public class Subscribers implements Subscriber<AmazonData>, Runnable {
 	private AmazonData jsonData = new AmazonData();
 	private BlockingQueue<AmazonData> filtered = new ArrayBlockingQueue<>(100);
 	ArrayList<AmazonData> filterData = new ArrayList<>();
+	int countEqual = 0;
+	int countOther = 0;
 	private int count = 1;
 	private int mode;
 
@@ -35,16 +37,27 @@ public class Subscribers implements Subscriber<AmazonData>, Runnable {
 	public void onEvent(AmazonData item) {
 		// TODO Auto-generated method stub
 		//type.
+		item = (AmazonData) item;
 		if(item.getUnixReviewTime() < 1362268800 && mode == 1) {
 			filterData.add(item);
+			//if(count<100)
+			//	System.out.println("OLD");
 			//filtered.add(item);
 		}
-		else {//if(item.getUnixReviewTime() > 1362268800 && mode == 2) {
+		else if(item.getUnixReviewTime() > 1362268800 && mode == 2) {
 			filterData.add(item);
+			//if(count<100)
+			//	System.out.println("NEW");
 			//filtered.add(item);
 		}
+		else if (item.getUnixReviewTime() == 1362268800){
+			countEqual++;
+		}
+		//else {
+		//	countOther++;
+		//}
 
-		//System.out.println("RECEIEVED FROM BROKER OBJECT : " + count + "MODE : " + mode + " \n " + jsonData.toString());
+		//System.out.println("RECEIEVED FROM BROKER OBJECT : " + count + "MODE : " + mode + " \n " + item.toString());
 		count++;
 		
 	}
@@ -53,48 +66,6 @@ public class Subscribers implements Subscriber<AmazonData>, Runnable {
 	public void run() {
 		// TODO Auto-generated method stub
 		System.out.println("RUN RUN RUN " + mode);
-		/*
-		String outputFile;
-		if(mode == 1) {
-			outputFile = "old.json";
-		}
-		else {
-			outputFile = "new.json";
-		}
-		try {
-			write = new BufferedWriter(new FileWriter(new File(outputFile)));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		
-		
-		AmazonData data = null;
-		try {
-			while((data = filtered.take()) != null) {
-				write.write((filtered.take()).toString());
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		/*
-		while(jsonData == null) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		process();
-		jsonData = null;
-		*/
 	}
 	
 	public void display() {

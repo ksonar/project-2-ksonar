@@ -6,6 +6,7 @@ public class SyncBroker<T> implements Broker {
 	private static SyncBroker INSTANCE;
 	private ArrayList<Subscriber> subscriberList = new ArrayList<>();
 	private int count = 1;
+	ArrayList<Publisher> pubList = new ArrayList<>();
 	private SyncBroker() { }
 	
 	
@@ -21,9 +22,17 @@ public class SyncBroker<T> implements Broker {
 	public synchronized void  publish(Object item) {
 		// TODO Auto-generated method stub
 		//System.out.println("RECEIVED FROM PUB OBJECT " + count);
+		//System.out.println(item);
 		count++;
 		for(Subscriber s : subscriberList) {
 			s.onEvent(item);
+		}
+		
+	}
+	
+	public void registerPubList(ArrayList<Publisher> p) {
+		for(Publisher a : p) {
+			pubList.add(a);
 		}
 		
 	}
@@ -39,6 +48,11 @@ public class SyncBroker<T> implements Broker {
 	@Override
 	public void shutdown() {
 		// TODO Auto-generated method stub
+		
+		for(Publisher t : pubList) {
+			System.out.println("INTERRUPTING!!!\n");
+			t.setRunning();
+		}
 		
 	}
 
