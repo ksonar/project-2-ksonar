@@ -8,12 +8,14 @@ public class Publisher<T> implements Runnable {
 	private Broker broker;
 	boolean flag = false;
 	
-	private AtomicBoolean running = new AtomicBoolean(true);
+	//private AtomicBoolean running = new AtomicBoolean(true);
+	private boolean running = true;
 	
+	//public boolean getRunning() { return running.get(); }
+	public boolean getRunning() { return running; }
 	
-	public boolean getRunning() { return running.get(); }
-	
-	public void setRunning() { this.running.set(false); }
+	//public void setRunning() { this.running.set(false); }
+	public void setRunning() { running = false; }
 	
 	public Publisher(ArrayList<T> data, Broker broker) {
 		jsonData = data;
@@ -30,7 +32,8 @@ public class Publisher<T> implements Runnable {
 		//while(running.get() && count < len) {
 		for(T f : jsonData) {
 			//System.out.println(running.get() + " : " + count);
-			if(running.get() && count < len) {
+			//if(running.get() && count < len) {
+			if(running == true) {
 				//System.out.println(count);
 				//if(count == 10) {
 				//	break;
@@ -39,7 +42,8 @@ public class Publisher<T> implements Runnable {
 				broker.publish(f);
 			} 
 			else {
-				running.set(false);
+				//running.set(false);
+				running = false;
 				break;
 			}
 			
@@ -51,9 +55,7 @@ public class Publisher<T> implements Runnable {
 
 	}
 	
-	public void stopThread() {
-		running.set(false);
-	}
+
 	
 	public void display() {
 		
