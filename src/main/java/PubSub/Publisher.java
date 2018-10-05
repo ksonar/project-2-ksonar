@@ -1,74 +1,65 @@
 package PubSub;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 public class Publisher<T> implements Runnable {
-	private ArrayList<T> jsonData;
-	private Broker broker;
-	boolean flag = false;
+	private Broker<T> broker;
+	String fName;
+	Class<T> type;
 	
-	//private AtomicBoolean running = new AtomicBoolean(true);
-	private boolean running = true;
-	
-	//public boolean getRunning() { return running.get(); }
-	public boolean getRunning() { return running; }
-	
-	//public void setRunning() { this.running.set(false); }
-	public void setRunning() { running = false; }
-	
-	public Publisher(ArrayList<T> data, Broker broker) {
-		jsonData = data;
+	public Publisher(String fName, Class<T> type, Broker<T> broker) {
+		this.fName = fName;
 		this.broker = broker;
-	}
+		this.type = type;
+	}	
 	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		int count = 0;
-		int len = jsonData.size();
-		System.out.println(len);
-		//display();
-		//while(running.get() && count < len) {
-		for(T f : jsonData) {
-			//System.out.println(running.get() + " : " + count);
-			//if(running.get() && count < len) {
-			if(running == true) {
-				//System.out.println(count);
-				//if(count == 10) {
-				//	break;
-				//}
+		int counter = 0;
+		String line;
+		Gson gson = new GsonBuilder().create();
+		BufferedReader f = null;
+		T item;
+		
+		try {
+			f = Files.newBufferedReader(Paths.get(fName), StandardCharsets.ISO_8859_1);
+			while((line = f.readLine()) != null) {
+				item = gson.fromJson(line, type);
+				broker.publish(item);
 				count++;
-				broker.publish(f);
-			} 
-			else {
-				//running.set(false);
-				running = false;
-				break;
+				counter++;
+				//System.out.println("Data from ");
+				//data.add(gson.fromJson(line, type));
 			}
-			
-		
-		//System.out.println("RUNNING : " + running);
-	}
-		
-		System.out.println("NOT PUBLISHING ANYMORE : " + count);
-
-	}
-	
-
-	
-	public void display() {
-		
-		int count = 0;
-		System.out.println("LENGTH " + jsonData.size());
-		for(T f : jsonData) {
-			if(count == 10) {
-				break;
-			}
-			
-			System.out.println(f.toString());
-			count++;
+			//System.out.println("DONE READING AND PUBLISHING");
 		}
+		catch (NoSuchFileException i){
+			System.out.println("MESSAGE : NO SUCH FILE!");
+			System.exit(1);
+		}
+		catch (JsonSyntaxException i) {
+			System.out.println("MESSAGE : JSON error!");
+		} 
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("DONE!!! "+ count);
+
 	}
+	
 
 }

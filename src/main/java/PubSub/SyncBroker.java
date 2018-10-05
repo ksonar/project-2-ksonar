@@ -3,20 +3,9 @@ package PubSub;
 import java.util.ArrayList;
 
 public class SyncBroker<T> implements Broker {
-	private static SyncBroker INSTANCE;
-	private ArrayList<Subscriber> subscriberList = new ArrayList<>();
+
+	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
 	private int count = 1;
-	ArrayList<Publisher> pubList = new ArrayList<>();
-	private SyncBroker() { }
-	
-	
-	//<?> : https://stackoverflow.com/questions/9921676/what-does-class-mean-in-java
-	public synchronized static SyncBroker<?> getInstance() {
-		if(INSTANCE == null) {
-			INSTANCE = new SyncBroker();
-		}
-		return INSTANCE;
-	}
 	
 	@Override
 	public synchronized void  publish(Object item) {
@@ -27,14 +16,6 @@ public class SyncBroker<T> implements Broker {
 		for(Subscriber s : subscriberList) {
 			s.onEvent(item);
 		}
-		
-	}
-	
-	public void registerPubList(ArrayList<Publisher> p) {
-		for(Publisher a : p) {
-			pubList.add(a);
-		}
-		
 	}
 
 	@Override
@@ -48,11 +29,7 @@ public class SyncBroker<T> implements Broker {
 	@Override
 	public void shutdown() {
 		// TODO Auto-generated method stub
-		
-		for(Publisher t : pubList) {
-			System.out.println("INTERRUPTING!!!\n");
-			t.setRunning();
-		}
+
 		
 	}
 

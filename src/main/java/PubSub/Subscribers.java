@@ -4,79 +4,60 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 public class Subscribers implements Subscriber<AmazonData>, Runnable {
-	private Broker broker;
+	private Broker<AmazonData> broker;
 	private AmazonData jsonData = new AmazonData();
-	private BlockingQueue<AmazonData> filtered = new ArrayBlockingQueue<>(100);
-	ArrayList<AmazonData> filterData = new ArrayList<>();
 	int countEqual = 0;
 	int countOther = 0;
-	private int count = 1;
+	int count = 0;
+	private int count1 = 0;
+	private int count2 = 0;
 	private int mode;
+	String outputFile;
 
 	private BufferedWriter write;
-	//BufferedWriter write = new BufferedWriter(new FileWriter(new File(outputFile)));
-	//BufferedWriter write = new BufferedWriter(new FileWriter(new File(outputFile)));
-
+	public int getCount1() { return count1;}
+	public int getCount2() { return count2;}
 	
-	public Subscribers(Broker broker, int mode) {
+	public int getCount() { return count; }
+	
+	public Subscribers(Broker<AmazonData> broker, int mode) {
 		this.broker = broker;
 		this.mode = mode;
-
-		System.out.println(jsonData.getClass());
 		broker.subscribe(this);
-
+		setup();
 	}
 	
 		
 	@Override
 	public void onEvent(AmazonData item) {
 		// TODO Auto-generated method stub
-		//type.
 		item = (AmazonData) item;
-		if(item.getUnixReviewTime() < 1362268800 && mode == 1) {
-			filterData.add(item);
-			//if(count<100)
-			//	System.out.println("OLD");
-			//filtered.add(item);
+		if((item.getUnixReviewTime() < 1362268800 && mode == 1) || (item.getUnixReviewTime() > 1362268800 && mode == 2) ) {
+			try {
+			write.write(item.toString() + "\n");
+			}
+			catch (IOException i) {
+				System.out.print("IO ERROR");
+			}
+			count++;
+
 		}
-		else if(item.getUnixReviewTime() > 1362268800 && mode == 2) {
-			filterData.add(item);
-			//if(count<100)
-			//	System.out.println("NEW");
-			//filtered.add(item);
-		}
+
 		else if (item.getUnixReviewTime() == 1362268800){
 			countEqual++;
 		}
-		//else {
-		//	countOther++;
+		
+		//if ( (count + countEqual) % 100000 == 0) {
+		//	System.out.println("RECEVIED : " + (count+countEqual));
 		//}
-
 		//System.out.println("RECEIEVED FROM BROKER OBJECT : " + count + "MODE : " + mode + " \n " + item.toString());
-		count++;
 		
 	}
-
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		System.out.println("RUN RUN RUN " + mode);
-	}
 	
-	public void display() {
-		for(AmazonData a : filterData) {
-			System.out.println(a.toString());
-		}
-	}
 	
-	public void process() throws IOException {
-		String outputFile;
-		System.out.println("HEY");
+	private void setup() {
 		if(mode == 1) {
 			outputFile = "old.json";
 		}
@@ -86,18 +67,15 @@ public class Subscribers implements Subscriber<AmazonData>, Runnable {
 		try {
 			write = new BufferedWriter(new FileWriter(new File(outputFile)));
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			System.out.println("IO ERROR @ SETUP");
 		}
 		System.out.println(outputFile);
-		for(AmazonData a : filterData) {
-			//System.out.println("...");
-			write.write(a.toString() + "\n");
-		}
-		
-		write.close();
-
 	}
 
+	@Override
+	public void run() {
+		
+	}
 
+	
 }
