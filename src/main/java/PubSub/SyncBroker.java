@@ -2,7 +2,7 @@ package PubSub;
 
 import java.util.ArrayList;
 
-public class SyncBroker<T> implements Broker {
+public class SyncBroker<T> implements Broker<T> {
 
 	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
 	private int count = 1;
@@ -10,16 +10,15 @@ public class SyncBroker<T> implements Broker {
 	@Override
 	public synchronized void  publish(Object item) {
 		// TODO Auto-generated method stub
-		//System.out.println("RECEIVED FROM PUB OBJECT " + count);
-		//System.out.println(item);
 		count++;
-		for(Subscriber s : subscriberList) {
-			s.onEvent(item);
+		T data = (T) item;
+		for(Subscriber<T> s : subscriberList) {
+			s.onEvent(data);
 		}
 	}
 
 	@Override
-	public void subscribe(Subscriber subscriber) {
+	public void subscribe(Subscriber<T> subscriber) {
 		// TODO Auto-generated method stub
 		System.out.println("ADDING NEW SUBSCRIBER");
 		subscriberList.add(subscriber);
@@ -28,9 +27,11 @@ public class SyncBroker<T> implements Broker {
 
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
-
 		
+		for(Subscriber<T> s : subscriberList) {
+			s.close();
+		}
+
 	}
 
 }

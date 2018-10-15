@@ -16,7 +16,7 @@ public class AmazonData {
 	@Override
 	public String toString() {
 		//return "reviewID : " + reviewerID + "\tunixReviewTime : " + unixReviewTime;
-		return "reviewID : " + reviewerID + " asin : " + asin + " reviewerName : " + reviewerName + " helpful : "+ helpful+ " reviewText : "+reviewText+" overall : "+overall+" summary : "+summary+" unixReviewTime : "+unixReviewTime+" reviewTime : "+reviewTime;
+		return "{'reviewID' : " + reviewerID + ",'asin' : " + asin + ",'reviewerName' : " + reviewerName + ",'helpful' : " + helpful + ",'reviewText' : " + reviewText + ",'overall' : " + overall + ",'summary' : " + summary + ",'unixReviewTime' : " + unixReviewTime + ",'reviewTime' : " + reviewTime + "}\n";
 	}
 	
 	public Double getUnixReviewTime() { return unixReviewTime; }

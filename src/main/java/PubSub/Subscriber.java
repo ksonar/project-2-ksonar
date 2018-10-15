@@ -7,4 +7,6 @@ public interface Subscriber<T> {
 	 * @param item
 	 */
 	public void onEvent(T item);
+	
+	public void close();
 }

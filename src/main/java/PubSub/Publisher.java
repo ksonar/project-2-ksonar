@@ -43,7 +43,7 @@ public class Publisher<T> implements Runnable {
 				//System.out.println("Data from ");
 				//data.add(gson.fromJson(line, type));
 			}
-			//System.out.println("DONE READING AND PUBLISHING");
+		System.out.println("DONE READING AND PUBLISHING : " + count);
 		}
 		catch (NoSuchFileException i){
 			System.out.println("MESSAGE : NO SUCH FILE!");
@@ -56,9 +56,6 @@ public class Publisher<T> implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		System.out.println("DONE!!! "+ count);
-
 	}
 	
 

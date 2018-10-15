@@ -27,6 +27,7 @@ public class PubSubBlockingQueue<T> {
 		end = next;		
 		size++;
 		if(size == 1) {
+		//if(size > 0) {
 			this.notifyAll();
 		}
 		
@@ -36,6 +37,7 @@ public class PubSubBlockingQueue<T> {
 	public synchronized T take() {
 		
 		while(size == 0) {
+			System.out.println("SIZE = 0");
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -47,6 +49,7 @@ public class PubSubBlockingQueue<T> {
 		start = (start+1)%items.length;
 		size--;
 		if(size == items.length-1) {
+		//if(size < items.length) {
 			this.notifyAll();
 		}
 		return item;

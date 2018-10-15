@@ -1,35 +1,37 @@
-package PubSub;
+package PubSub; 
 
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-public class AsyncOBroker<T> implements Broker, Runnable {
-	//BlockingQueue<T> dataQueue = new ArrayBlockingQueue(100);
-	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue(1000);
-	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
+public class AsyncOBroker<T> implements Broker<T>, Runnable {
+
+	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue<T>(10);
 	
+	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
+	private int countPubItems = 0;
 	private boolean run = true;
 	
-	private boolean runningCheck = false;
+	//private boolean runningCheck = false;
 	
 	private boolean getRun() { return run; }
+	
+	public int getCountPubItems() { return countPubItems; }
 	
 	@Override
 	public void publish(Object item) {
 		// TODO Auto-generated method stub
-		//T a = (T) item;
-		dataQueue.put((T) item);
-
-		//for(T data : dataQueue) {
-		//	System.out.println(data.toString());
-		//}
-		//System.out.println("........"+dataQueue.size());
-		
+		T a = (T) item;
+		dataQueue.put(a);
+		count();
+	}
+	
+	public synchronized void count() {
+		countPubItems++;
 	}
 
 	@Override
-	public void subscribe(Subscriber subscriber) {
+	public void subscribe(Subscriber<T> subscriber) {
 		// TODO Auto-generated method stub
 		System.out.println("ADDING NEW SUBSCRIBER");
 		subscriberList.add(subscriber);
@@ -40,9 +42,8 @@ public class AsyncOBroker<T> implements Broker, Runnable {
 		// TODO Auto-generated method stub
 		run = false;
 		System.out.println("FALSE SET");
-		runningCheck = true;
-		
-		
+		System.out.println("RECEIVED " + countPubItems + " records from all publishers ");
+		//runningCheck = true;
 	}
 
 	@Override
@@ -52,11 +53,7 @@ public class AsyncOBroker<T> implements Broker, Runnable {
 		T item;
 		while(getRun()) {
 			pushing();
-			//if(runningCheck == true) {
-			//	System.out.println("CHECKING");
-			//}
 		}
-		System.out.println("STATE IS : " + run);
 		
 		for(int i = 0; i < dataQueue.getSize(); i++) {
 			item = dataQueue.take();
@@ -64,28 +61,17 @@ public class AsyncOBroker<T> implements Broker, Runnable {
 				s.onEvent(item);
 			}
 		}
-		
-		//for(T data : dataQueue) {
-		//	for(Subscriber<T> s : subscriberList) {
-		//		s.onEvent(data);
-		//	}
-		//}
-	System.out.println("ASYNC THREAD DONE");
-
-		
 	}
 	
 	public void pushing() {
 		T item;
-		if (dataQueue.getSize() > 1) {
+		//if (dataQueue.getSize() > 1) {
+		if (dataQueue.getSize() != 0) {
 			item = dataQueue.take();
 			for(Subscriber<T> s : subscriberList) {
 				s.onEvent(item);
 			}
 		}
-
-
-
 	}
 	
 	
