@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class AsyncOBroker<T> implements Broker<T>, Runnable {
 	
-	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue<T>(10);
+	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue<T>(20);
 	
 	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
 
