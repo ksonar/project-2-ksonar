@@ -2,6 +2,11 @@ package PubSub;
 
 import java.util.ArrayList;
 
+/*
+ * Amazon Reviews data stored here
+ * @author ksonar
+ */
+
 public class AmazonData {
 	private String reviewerID;
 	private String asin;

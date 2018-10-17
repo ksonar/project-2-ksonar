@@ -1,79 +1,64 @@
 package PubSub; 
 
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+
+/*
+ * AsynchronousOrderedBroker that will take in data without synchronization and push objects to susbcribers in an orderly manner
+ * @author ksonar
+ */
 
 public class AsyncOBroker<T> implements Broker<T>, Runnable {
-
+	
 	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue<T>(10);
 	
 	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
-	private int countPubItems = 0;
+
 	private boolean run = true;
-	
-	//private boolean runningCheck = false;
-	
+	int count = 0;
+
+	/*
+	 * Return running state of broker thread
+	 */
 	private boolean getRun() { return run; }
 	
-	public int getCountPubItems() { return countPubItems; }
-	
 	@Override
-	public void publish(Object item) {
-		// TODO Auto-generated method stub
-		T a = (T) item;
-		dataQueue.put(a);
-		count();
+	public void publish(T item) {
+		dataQueue.put(item);
+		//count();
 	}
-	
-	public synchronized void count() {
-		countPubItems++;
-	}
+
 
 	@Override
 	public void subscribe(Subscriber<T> subscriber) {
-		// TODO Auto-generated method stub
-		System.out.println("ADDING NEW SUBSCRIBER");
 		subscriberList.add(subscriber);
 	}
+	
 
+	/*
+	 * Update running state to false, called after publishers have finished publishing
+	 * @see PubSub.Broker#shutdown()
+	 */
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
 		run = false;
-		System.out.println("FALSE SET");
-		System.out.println("RECEIVED " + countPubItems + " records from all publishers ");
-		//runningCheck = true;
 	}
 
+	/*
+	 * Check running state, stop more s'onEvent' calls when run is false and size of queue is also 0
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		System.out.println("HII");
 		T item;
-		while(getRun()) {
-			pushing();
+		while((getRun() || dataQueue.getSize() != 0)) {
+			if (!dataQueue.isEmpty()) {
+				item = dataQueue.take();
+				for(Subscriber<T> s : subscriberList) {
+					s.onEvent(item);
+				}
+			}
 		}
+	}
 		
-		for(int i = 0; i < dataQueue.getSize(); i++) {
-			item = dataQueue.take();
-			for(Subscriber<T> s : subscriberList) {
-				s.onEvent(item);
-			}
-		}
-	}
-	
-	public void pushing() {
-		T item;
-		//if (dataQueue.getSize() > 1) {
-		if (dataQueue.getSize() != 0) {
-			item = dataQueue.take();
-			for(Subscriber<T> s : subscriberList) {
-				s.onEvent(item);
-			}
-		}
-	}
-	
-	
 
 }

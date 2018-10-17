@@ -4,105 +4,86 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
-public class Subscribers implements Subscriber<AmazonData> {
-	private Broker<AmazonData> broker;
+/*
+ * Subscriber class to write JSON objects to a file depending on unixTime
+ * @author ksonar
+ */
+
+public class Subscribers<T> implements Subscriber<T> {
 	private AmazonData jsonData = new AmazonData();
-	//private T jsonData = new type();
-	int countEqual = 0;
-	int countOther = 0;
-	int count = 0;
+	private int countEqual = 0;
+	private int count = 0;
 	private int count1 = 0;
-	private int count2 = 0;
 	private String fName;
-	String outputFile;
-
+	private int unixTime;
 	private BufferedWriter write;
 	public static BufferedWriter write2;
+	private Broker<T> broker;
+	
 	public int getCount1() { return count1;}
-	public int getCount2() { return count2;}
 	
 	public int getCount() { return count; }
 	
 	public int getEqualCount() { return countEqual; }
-	
-	public Subscribers(Broker broker, String fName) {
-		this.broker = broker;
+	/*
+	 * Subscriber constructor that will initialize and subscribe itself to the broker
+	 * @params broker, fName, unixTime
+	 */
+	public Subscribers(Broker<T> broker, String fName, int unixTime) {
 		this.fName = fName;
-		System.out.println(fName);
+		this.unixTime = unixTime;
+		this.broker = broker;
 		setup();
-		//broker.s
+		
 		broker.subscribe(this);
-		/*
-		try {
-			write = new BufferedWriter(new FileWriter(fName));
-			write2 = new BufferedWriter(new FileWriter("equals.json"));
-			//write = Files.newBufferedWriter(Paths.get(fName), StandardCharsets.ISO_8859_1);
-			//write2 = Files.newBufferedWriter(Paths.get("equal.json"), StandardCharsets.ISO_8859_1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
+		LogData.log.info("SUBSCRIBER ADDED");
 	}
 	
 	@Override
 	public void close()  {
-		System.out.println("CLOSING");
 		try {
 			write.close();
-			write2.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LogData.log.warning("UNABLE TO CLOSE FILE");
 		}
 		
 	}
-	@Override
-	public synchronized void onEvent(AmazonData item) {
-		// TODO Auto-generated method stub
-		jsonData = (AmazonData) item;
-		//System.out.println(count1 + " : " + jsonData);
-		count1++;
-		if((item.getUnixReviewTime() < 1362268800 && fName.equals("old.json")) || (item.getUnixReviewTime() > 1362268800 && fName.equals("new.json")) ) {
-			if(fName.equals("old.json") && count >= 13600)
-			{	
-				count2++;
-				//System.out.println(count2 + " : " + item.toString().replaceAll("\r\n", ""));
-			}
-			try {
-				write.write(item.toString());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			count++;
-		}
-
-		else if (item.getUnixReviewTime() == 1362268800){
-			countEqual++;
-			//synchronized(this) {
-			try {
-			write2.write(jsonData.toString() + "\n");
-			}
-			catch (IOException i) {
-				System.out.print("IO ERROR");
-			//}
-			}
-		}
-	}
-	
+	/*
+	 * Initialize a write object to append data to a file.
+	 */
 	private void setup() {
-		outputFile = fName;
 		try {
-			write = new BufferedWriter(new FileWriter(new File(outputFile)));
-			write2 = new BufferedWriter(new FileWriter(new File("equal.json")));
+			write = new BufferedWriter(new FileWriter(new File(fName)));
 		} catch (IOException e1) {
 			System.out.println("IO ERROR @ SETUP");
 		}
-		System.out.println(outputFile);
+	}
+	
+	/*
+	 * Filter received data to store selective JSON objects to file.
+	 * @see PubSub.Subscriber#onEvent(java.lang.Object)
+	 */
+	@Override
+	public synchronized void onEvent(T item) {
+		jsonData = (AmazonData) item;
+			count1++;
+		
+		
+		if((jsonData.getUnixReviewTime() < unixTime && fName.equals("old.json")) || (jsonData.getUnixReviewTime() > unixTime && fName.equals("new.json")) ) {
+			try {
+				write.write(item.toString());
+				
+			} 
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+				count++;
+		}
+		if(jsonData.getUnixReviewTime() == 1362268800) {
+				countEqual++;
+			
+		}
+
 	}
 }

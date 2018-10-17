@@ -1,69 +1,51 @@
 package PubSub;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AyncUBroker<T> implements Broker<T>, Runnable {
-	//LinkedList<T> dataQueue = new LinkedList<>();
-	ExecutorService executorService = Executors.newFixedThreadPool(5);
-	
+/*
+ * AsynUnorderedBroker will run tasks concurrently with a FixedThreadPool and an unbounded queue that will receive new tasks.
+ * @author ksonar
+ */
+
+public class AyncUBroker<T> implements Broker<T> {
+	ExecutorService executorService = Executors.newFixedThreadPool(4);
 	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
-	int count = 0;
+
+	/*
+	 * ExecutorService to execute jobs in the worker queue
+	 * @see PubSub.Broker#publish(java.lang.Object)
+	 */
 	@Override
-	public void publish(Object item) {
-		// TODO Auto-generated method stub
-		synchronized(this) { count++; }
+	public void publish(T item) {
 		executorService.execute(new Runnable() {
 		    public void run() {
-		    	T data = (T) item;
 				for(Subscriber<T> s : subscriberList) {
-					s.onEvent(data);
-				}
-		        //System.out.println(count);
-		        
+					s.onEvent(item);
+				}		        
 		    }
 		});
 	}
 
 	@Override
-	public void subscribe(Subscriber subscriber) {
-		// TODO Auto-generated method stub
-		System.out.println("ADDING NEW SUBSCRIBER");
+	public void subscribe(Subscriber<T> subscriber) {
 		subscriberList.add(subscriber);
 	}
-
+	
+	/*
+	 * Gracefully shutdown the broker, using await termination to block until all threads have finished
+	 * @see PubSub.Broker#shutdown()
+	 */
 	@Override
 	public void shutdown() {
-		// TODO Auto-generated method stub
 		executorService.shutdown();
 		try {
 			while(!executorService.awaitTermination(200, TimeUnit.MILLISECONDS)) {}
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			LogData.log.warning("COULD NOT SHUTDOWN PROPERLY");
 		}
-		//
-		/*
-		try {
-			while(!executorService.awaitTermination(2000, TimeUnit.MILLISECONDS)) {}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		executorService.shutdown();
-		*/
-		System.out.println("SHUTDOWN : " + count);
-		
-		
-	}
-
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		System.out.println("AsyncUnordered run");
 	}
 
 }

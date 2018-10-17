@@ -1,5 +1,8 @@
 package PubSub;
-
+/*
+ * Implementation of a BlockingQueue, takes care of pushing and pooping datsa elements in a systematic and synchronized manner.
+ * @author ksonar
+ */
 public class PubSubBlockingQueue<T> {
 	private T[] items;
 	private int start;
@@ -13,6 +16,10 @@ public class PubSubBlockingQueue<T> {
 		this.size = 0;
 	}
 
+	/*
+	 * Inserts a data object into queue, checks if size is full and notifies appropriately
+	 * @param item
+	 */
 	public synchronized void put(T item) {
 		
 		while(size == items.length) {
@@ -27,19 +34,24 @@ public class PubSubBlockingQueue<T> {
 		end = next;		
 		size++;
 		if(size == 1) {
-		//if(size > 0) {
 			this.notifyAll();
 		}
 		
 	}
 
-
+	/*
+	 * Checks for empty queue size and returns null with a timeout. If element present, then it will pop and return.
+	 */
 	public synchronized T take() {
 		
 		while(size == 0) {
 			System.out.println("SIZE = 0");
 			try {
-				this.wait();
+				this.wait(5);
+				if(size == 0) {
+					System.out.println("DONE");
+					return null;
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}		
@@ -49,12 +61,10 @@ public class PubSubBlockingQueue<T> {
 		start = (start+1)%items.length;
 		size--;
 		if(size == items.length-1) {
-		//if(size < items.length) {
 			this.notifyAll();
 		}
 		return item;
 	}
-
 
 	public synchronized boolean isEmpty() {
 		return size == 0;

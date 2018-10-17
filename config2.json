@@ -1,0 +1,6 @@
+{
+	'pubFiles' : ['Apps_for_Android.json', 'Home_and_Kitchen.json'],
+	'subFiles' : ['old.json', 'new.json'],
+	'brokerType' : 'AsyncUnordered',
+	'unixTime' : 1362268800
+}
