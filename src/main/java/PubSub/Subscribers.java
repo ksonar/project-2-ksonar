@@ -40,6 +40,10 @@ public class Subscribers<T> implements Subscriber<T> {
 		LogData.log.info("SUBSCRIBER ADDED");
 	}
 	
+	/*
+	 * Close subscriber file
+	 * @see PubSub.Subscriber#close()
+	 */
 	@Override
 	public void close()  {
 		try {
@@ -56,6 +60,7 @@ public class Subscribers<T> implements Subscriber<T> {
 		try {
 			write = new BufferedWriter(new FileWriter(new File(fName)));
 		} catch (IOException e1) {
+			LogData.log.warning("IOException @ Setup");
 			System.out.println("IO ERROR @ SETUP");
 		}
 	}
@@ -67,8 +72,7 @@ public class Subscribers<T> implements Subscriber<T> {
 	@Override
 	public synchronized void onEvent(T item) {
 		jsonData = (AmazonData) item;
-			count1++;
-		
+		count1++;
 		
 		if((jsonData.getUnixReviewTime() < unixTime && fName.equals("old.json")) || (jsonData.getUnixReviewTime() > unixTime && fName.equals("new.json")) ) {
 			try {
@@ -76,7 +80,7 @@ public class Subscribers<T> implements Subscriber<T> {
 				
 			} 
 			catch (IOException e) {
-				e.printStackTrace();
+				LogData.log.warning("IO Exception @ onEvent");
 			}
 				count++;
 		}

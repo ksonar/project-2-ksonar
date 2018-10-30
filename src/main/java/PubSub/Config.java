@@ -12,9 +12,12 @@ public class Config {
 	private ArrayList<String> subFiles;
 	private String brokerType;
 	private int unixTime;
-
+	private int poolSize;
+	private int queueSize;
+	
+	@Override
 	public String toString() {
-		return pubFiles + "\t" + subFiles + "\t" + brokerType + '\t' + unixTime;
+		return pubFiles + "\t" + subFiles + "\t" + brokerType + '\t' + unixTime + '\t' + poolSize + '\t' + queueSize;
 		
 	}
 	
@@ -23,5 +26,7 @@ public class Config {
 	public ArrayList<String> subs() { return subFiles; }
 	public String type() { return brokerType; }
 	public int unix() { return unixTime; }
+	public int getPoolSize() { return poolSize; }
+	public int getQueueSize() { return queueSize; }
 
 }

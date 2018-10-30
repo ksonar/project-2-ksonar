@@ -26,7 +26,7 @@ public class PubSubBlockingQueue<T> {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				
 			}
 		}				
 		int next = (end+1)%items.length;
@@ -38,25 +38,37 @@ public class PubSubBlockingQueue<T> {
 		}
 		
 	}
-
+	
 	/*
 	 * Checks for empty queue size and returns null with a timeout. If element present, then it will pop and return.
 	 */
-	public synchronized T take() {
+	public synchronized T poll(int timeout) {
 		
-		while(size == 0) {
-			System.out.println("SIZE = 0");
+		if(size == 0) {
 			try {
-				this.wait(5);
+				long time = System.currentTimeMillis();
+				this.wait(timeout);
+				long elapsedTime = System.currentTimeMillis() - time;
+				while(size == 0 && elapsedTime < timeout) {
+					System.out.println(elapsedTime);
+					long time1 = System.currentTimeMillis();
+					this.wait(timeout - elapsedTime);
+					if(size != 0) {
+						break;
+					}
+					elapsedTime += (System.currentTimeMillis() - time1);
+					System.out.println(elapsedTime+ "\n......\n");
+				}
+				
 				if(size == 0) {
-					System.out.println("DONE");
 					return null;
 				}
-			} catch (InterruptedException e) {
+				
+				}
+			 catch (InterruptedException e) {
 				e.printStackTrace();
-			}		
+			}
 		}
-
 		T item = items[start];
 		start = (start+1)%items.length;
 		size--;
@@ -65,11 +77,17 @@ public class PubSubBlockingQueue<T> {
 		}
 		return item;
 	}
-
+	
+	/*
+	 * Returns true if size is 0
+	 */
 	public synchronized boolean isEmpty() {
 		return size == 0;
 	}
 	
+	/*
+	 * Return size of BlockingQueue
+	 */
 	public synchronized int getSize() {
 		return size;
 	}

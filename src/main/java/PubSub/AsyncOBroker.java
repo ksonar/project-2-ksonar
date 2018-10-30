@@ -1,6 +1,6 @@
 package PubSub; 
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /*
  * AsynchronousOrderedBroker that will take in data without synchronization and push objects to susbcribers in an orderly manner
@@ -8,32 +8,39 @@ import java.util.ArrayList;
  */
 
 public class AsyncOBroker<T> implements Broker<T>, Runnable {
+	private PubSubBlockingQueue<T> dataQueue;
 	
-	PubSubBlockingQueue<T> dataQueue = new PubSubBlockingQueue<T>(20);
-	
-	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
+	private CopyOnWriteArrayList<Subscriber<T>> subscriberList = new CopyOnWriteArrayList<>();
 
-	private boolean run = true;
-	int count = 0;
+	private volatile boolean run = true;
+	
+	public AsyncOBroker(int queueSize) {
+		dataQueue = new PubSubBlockingQueue<T>(queueSize);
+	}
 
 	/*
 	 * Return running state of broker thread
 	 */
 	private boolean getRun() { return run; }
 	
+	/*
+	 * Put an item into the BlockingQueue
+	 * @see PubSub.Broker#publish(java.lang.Object)
+	 */
 	@Override
 	public void publish(T item) {
 		dataQueue.put(item);
-		//count();
 	}
 
-
+	/*
+	 * Register incoming subscriber
+	 * @see PubSub.Broker#subscribe(PubSub.Subscriber)
+	 */
 	@Override
 	public void subscribe(Subscriber<T> subscriber) {
 		subscriberList.add(subscriber);
 	}
 	
-
 	/*
 	 * Update running state to false, called after publishers have finished publishing
 	 * @see PubSub.Broker#shutdown()
@@ -50,14 +57,17 @@ public class AsyncOBroker<T> implements Broker<T>, Runnable {
 	@Override
 	public void run() {
 		T item;
-		while((getRun() || dataQueue.getSize() != 0)) {
-			if (!dataQueue.isEmpty()) {
-				item = dataQueue.take();
+		//|| dataQueue.getSize() != 0)
+		while((getRun())) {
+			item = dataQueue.poll(1000);
+			if (item != null) {
+				//item = dataQueue.take();
 				for(Subscriber<T> s : subscriberList) {
 					s.onEvent(item);
 				}
 			}
 		}
+		//System.out.println(PubSubBlockingQueue.c);
 	}
 		
 

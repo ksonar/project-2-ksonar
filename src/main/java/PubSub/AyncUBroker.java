@@ -1,6 +1,7 @@
 package PubSub;
 
-import java.util.ArrayList;
+
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -11,8 +12,12 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class AyncUBroker<T> implements Broker<T> {
-	ExecutorService executorService = Executors.newFixedThreadPool(4);
-	private ArrayList<Subscriber<T>> subscriberList = new ArrayList<>();
+	private ExecutorService executorService;
+	private CopyOnWriteArrayList<Subscriber<T>> subscriberList = new CopyOnWriteArrayList<>();
+	
+	public AyncUBroker(int poolSize) {
+		executorService = Executors.newFixedThreadPool(poolSize);
+	}
 
 	/*
 	 * ExecutorService to execute jobs in the worker queue
@@ -28,7 +33,11 @@ public class AyncUBroker<T> implements Broker<T> {
 		    }
 		});
 	}
-
+	
+	/*
+	 * Register incoming subscriber
+	 * @see PubSub.Broker#subscribe(PubSub.Subscriber)
+	 */
 	@Override
 	public void subscribe(Subscriber<T> subscriber) {
 		subscriberList.add(subscriber);

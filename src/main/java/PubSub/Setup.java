@@ -17,7 +17,7 @@ import com.google.gson.JsonSyntaxException;
 public class Setup<T> {
 
 	private String cFile;
-	private Config c;
+	private Config configData;
 	private Class<T> type;
 	private ArrayList<Publisher<T>> publishers = new ArrayList<>();
 	private ArrayList<Subscribers<T>> subscribers = new ArrayList<>();
@@ -28,6 +28,9 @@ public class Setup<T> {
 	
 	private long sTime, eTime;
 	
+	/*
+	 * Display count of old, new and equal. Also display count of total items received 
+	 */
 	public void displayCount() {
 		String x = String.format("\nOLD : %d \t NEW : %d\t EQUAL : %d %d \t RECEIVED : %d %d",subscribers.get(0).getCount(),subscribers.get(1).getCount(),subscribers.get(0).getEqualCount(),subscribers.get(1).getEqualCount(),subscribers.get(0).getCount1(),subscribers.get(1).getCount1());
 		System.out.println(x);
@@ -52,9 +55,9 @@ public class Setup<T> {
 		Gson gson = new GsonBuilder().create();
 		try {
 		BufferedReader f = Files.newBufferedReader(Paths.get(cFile));
-		c = gson.fromJson(f, Config.class);
-		System.out.println(c.toString() + '\n');
-		LogData.log.info(c.toString());
+		configData = gson.fromJson(f, Config.class);
+		System.out.println(configData.toString() + '\n');
+		LogData.log.info(configData.toString());
 		}
 		catch (IOException | NullPointerException i) {
 			LogData.log.warning("NO SUCH FILE");
@@ -85,13 +88,16 @@ public class Setup<T> {
 			LogData.log.info("PUB THREAD STARTED : " + t);
 		}
 		
-		if((c.type().equals("AsyncOrdered"))) {
+		if((configData.type().equals("AsyncOrdered"))) {
 			brokerThread.start();
 			LogData.log.info("ASYNCORDERED BROKER THREAD STARTED : " + brokerThread);
 		}
 		
 	}
 	
+	/*
+	 * Join all publisherThreads, call shutdown and then close all subscriber files
+	 */
 	public void join() {
 		for(Thread t : publisherThreads) {
 			try {
@@ -105,7 +111,7 @@ public class Setup<T> {
 		}
 		broker.shutdown();
 		System.out.println("SHUTDOWN EXEC TIME : "+ (eTime-sTime)/1000.0);
-		if((c.type().equals("AsyncOrdered"))) {
+		if((configData.type().equals("AsyncOrdered"))) {
 			try {
 				brokerThread.join();
 				LogData.log.info("ASYNCORDERD THREAD JOINED : " + brokerThread);
@@ -119,17 +125,20 @@ public class Setup<T> {
 		LogData.log.info("CLOSED SUBSCRIBER FILES");
 	}
 	
+	/*
+	 * Set broker type
+	 */
 	public void setBroker() {
-		String brokerType = c.type();
+		String brokerType = configData.type();
 		if(brokerType.equals("Sync")) {
 			broker = new SyncBroker<T>();
 		}
 		else if(brokerType.equals("AsyncOrdered")) {
-			broker = new AsyncOBroker<T>();
+			broker = new AsyncOBroker<T>(configData.getQueueSize());
 			brokerThread = new Thread((Runnable) broker);
 		}
 		else if(brokerType.equals("AsyncUnordered")) {
-			broker = new AyncUBroker<T>();
+			broker = new AyncUBroker<T>(configData.getPoolSize());
 		}
 		else {
 			LogData.log.warning("INVALID BROKER, please try again");
@@ -137,8 +146,11 @@ public class Setup<T> {
 		}
 	}
 	
+	/*
+	 * Set Publishers and its threads
+	 */
 	public void setPub() {
-		for(String fName : c.pubs()) {
+		for(String fName : configData.pubs()) {
 			publishers.add(new Publisher<T>(fName, type, broker));
 		}
 		LogData.log.info("#Pubs : " + publishers.size());
@@ -148,9 +160,12 @@ public class Setup<T> {
 		LogData.log.info("#PubThreads : " + publisherThreads.size());
 	}
 	
+	/*
+	 * Set Subscribers
+	 */
 	public void setSub() throws IOException {
-		for(String fName : c.subs()) {
-			subscribers.add(new Subscribers(broker, fName, c.unix()));
+		for(String fName : configData.subs()) {
+			subscribers.add(new Subscribers<T>(broker, fName, configData.unix()));
 		}
 		LogData.log.info("#Subs : " + subscribers.size());
 		

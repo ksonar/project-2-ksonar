@@ -16,12 +16,11 @@ import com.google.gson.JsonSyntaxException;
 
 public class Publisher<T> implements Runnable {
 	private Broker<T> broker;
-	String fName;
-	Class<T> type;
-	String line;
-	Gson gson = new GsonBuilder().create();
-	BufferedReader f = null;
-	T item;
+	private String fName;
+	private Class<T> type;
+	private String line;
+	private Gson gson = new GsonBuilder().create();
+	private T item;
 	
 	/*
 	 * Constructor to initialzie the publisher.
@@ -40,7 +39,6 @@ public class Publisher<T> implements Runnable {
 	 */
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		int count = 0;
 		long sTime = System.currentTimeMillis();
 		

@@ -16,7 +16,6 @@ public class PublisherSubscriber {
 		}
 		LogData.createLogger();
 		for(int i = 1; i < args.length; i++) {
-			//LogData.log.info(");
 			String cFile = args[i];
 			
 			Setup<AmazonData> setup = new Setup<AmazonData>(cFile, AmazonData.class);

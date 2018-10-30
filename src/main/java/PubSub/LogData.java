@@ -15,12 +15,9 @@ import java.util.logging.SimpleFormatter;
 
 public class LogData {
 	public static Logger log = null;
-	private static LogData instance = null;
 	
 	public static void createLogger() throws SecurityException, IOException {
-		if(instance == null) {
-			buildLogger();
-		}
+		buildLogger();
 	}
 	
 	private static void buildLogger() throws SecurityException, IOException {
